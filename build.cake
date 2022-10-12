@@ -1,4 +1,4 @@
-#addin nuget:?package=Cake.Http&version=1.3.0
+#addin nuget:?package=Cake.Http&version=2.0.0
 #addin nuget:?package=Cake.Json&version=7.0.1
 
 var target = Argument("target", "Default");
