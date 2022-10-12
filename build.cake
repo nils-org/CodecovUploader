@@ -46,6 +46,28 @@ private void DownloadExecutable(string distro, DirectoryPath dir)
    DownloadFile(link, dir.CombineWithFilePath(File(name)));
 }
 
+private string[] GetExistingNuGetVersions() 
+{
+   var settings =  new HttpSettings
+   {
+      Headers = new Dictionary<string, string>
+      {
+         {"Accept", "application/json"}
+      }
+   };
+
+   var json = HttpGet("https://api.nuget.org/v3/index.json", settings);
+
+   var url = (string)ParseJson(json)["resources"].AsJEnumerable().First(x => (string)x["@type"] == "RegistrationsBaseUrl")["@id"];
+   url = url + "codecovuploader/index.json";
+   Information("Fetching NuGet versions from: "+url);
+   json = HttpGet(url, settings);
+   var versions = ParseJson(json)["items"].AsJEnumerable().First()["items"].AsJEnumerable().Select(i => (string)i["catalogEntry"]["version"]).ToArray();
+
+   Information("versions in NuGet: " + string.Join(", ", versions));
+   return versions;
+}
+
 Task("Clean")
 .Does(() => {
    CleanDirectory(binDir);
@@ -121,31 +143,7 @@ Task("Push")
 Task("CI")
  .Does(() =>
 {
-   var settings =  new HttpSettings
-   {
-      Headers = new Dictionary<string, string>
-      {
-         {"Accept", "application/json"}
-      }
-   };
-
-   var json = HttpGet("https://api.nuget.org/v3/index.json", settings);
-
-   /* old PackageBaseAddress
-   var url = (string)ParseJson(json)["resources"].AsJEnumerable().First(x => (string)x["@type"] == "PackageBaseAddress/3.0.0")["@id"];
-   url = url + "CodecovUploader/index.json";
-   Information("Fetching NuGet versions from: "+url);
-   json = HttpGet(url, settings);
-   var versions = ParseJson(json)["versions"].AsJEnumerable().Select(t => (string)t).ToArray();
-   */
-
-   var url = (string)ParseJson(json)["resources"].AsJEnumerable().First(x => (string)x["@type"] == "RegistrationsBaseUrl")["@id"];
-   url = url + "codecovuploader/index.json";
-   Information("Fetching NuGet versions from: "+url);
-   json = HttpGet(url, settings);
-   var versions = ParseJson(json)["items"].AsJEnumerable().First()["items"].AsJEnumerable().Select(i => (string)i["catalogEntry"]["version"]).ToArray();
-
-   Information("versions in NuGet: " + string.Join(", ", versions));
+   var versions = GetExistingNuGetVersions();
 
    var currentVer = GetLatestVersion().Substring(1);
    Information("Current version in Codecov: " + currentVer);
@@ -159,8 +157,34 @@ Task("CI")
    RunTarget("Push");
 });
 
+Task("GetVersionManually")
+.Does(() => 
+{
+   if(string.IsNullOrEmpty(version)) 
+   {
+      Error("version is not set. Use argument 'tool-version'. E.g. '--tool-version=0.2.4'");
+      throw new ArgumentNullException("version");
+   }
+
+   if(version.StartsWith("v")) 
+   {
+      version = version.Substring(1);
+   }
+
+   var nuGetVersions = GetExistingNuGetVersions();
+   if(nuGetVersions.Contains(version)) 
+   {
+      Information("Version already in NuGet. Nothing to do.");
+      return;
+   }
+   
+   version = "v"+version;
+   RunTarget("Push");
+});
+
+
 Task("Default")
  .IsDependentOn("Clean")
- .IsDependentOn("Pack");
+ .IsDependentOn("GetVersionManually");
 
 RunTarget(target);
