@@ -4,6 +4,7 @@
 var target = Argument("target", "Default");
 var version = Argument<string>("tool-version", null);
 var binDir = Directory("./bin");
+var mediaDir = Directory("./media");
 
 private string GetLatestVersion()
 {
@@ -82,18 +83,23 @@ Task("GetExecutables")
    DownloadExecutable("windows", dir);
 });
 
-Task("GetLicense")
+Task("GetArtifacts")
 .Does(() => {
-   var url = "https://cdn.jsdelivr.net/gh/codecov/uploader@main/LICENSE";
    var dir = binDir + Directory("root");
    CleanDirectory(dir);
-   var filePath = dir + File("license.txt");
-   DownloadFile(url, filePath.Path);
+
+   var urlLicense = "https://cdn.jsdelivr.net/gh/codecov/uploader@main/LICENSE";
+   var filePathLicense = dir + File("license.txt");
+   DownloadFile(urlLicense, filePathLicense.Path);
+
+   var srcLogo = mediaDir + File("codecov_logo.png");
+   var dstLogo = dir + File("logo.png");
+   CopyFile(srcLogo, dstLogo);
 });
 
 Task("Pack")
 .IsDependentOn("GetExecutables")
-.IsDependentOn("GetLicense")
+.IsDependentOn("GetArtifacts")
 .Does(() => {
    if(string.IsNullOrEmpty(version)) 
    {
@@ -135,7 +141,7 @@ Task("Pack")
       Description             = "Unofficial package of the official Codecov-Uploader",
       Summary                 = "Unofficial package of the official Codecov-Uploader",
       ProjectUrl              = new Uri("https://github.com/nils-org/CodecovUploader/"),
-      IconUrl                 = new Uri("https://cdn.jsdelivr.net/gh/codecov/media@0953f4e0d5315fb6d526a248bc88e1bc16506a37/logos/pink.png"),
+      Icon                    = "logo.png",
       License                 = new NuSpecLicense{Type = "file", Value = "license.txt"},
       Copyright               = "Codecov",
       ReleaseNotes            = new [] {$"Version {ver} of the Codecov-Uploader", $"https://github.com/codecov/uploader/releases/tag/{version}"},
