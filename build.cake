@@ -95,6 +95,10 @@ Task("GetArtifacts")
    var srcLogo = mediaDir + File("codecov_logo.png");
    var dstLogo = dir + File("logo.png");
    CopyFile(srcLogo, dstLogo);
+
+   var srcReadme = File("./README.md");
+   var dstReadme = dir + File("readme.md");
+   CopyFile(srcReadme, dstReadme);
 });
 
 Task("Pack")
@@ -132,27 +136,18 @@ Task("Pack")
       .ToArray();
 
    var ver = version.Substring(1);
-   NuGetPack(new NuGetPackSettings 
-   {
-      Id                      = "CodecovUploader",
-      Version                 = ver,
-      Title                   = "CodecovUploader",
-      Authors                 = new[] {"Codecov"},
-      Description             = "Unofficial package of the official Codecov-Uploader",
-      Summary                 = "Unofficial package of the official Codecov-Uploader",
-      ProjectUrl              = new Uri("https://github.com/nils-org/CodecovUploader/"),
-      Icon                    = "logo.png",
-      License                 = new NuSpecLicense{Type = "file", Value = "license.txt"},
-      Copyright               = "Codecov",
-      ReleaseNotes            = new [] {$"Version {ver} of the Codecov-Uploader", $"https://github.com/codecov/uploader/releases/tag/{version}"},
-      Tags                    = new [] {"Codecov", "upload", "test", "coverage"},
-      RequireLicenseAcceptance= false,
-      Symbols                 = false,
-      NoPackageAnalysis       = true,
-      Files                   = nuSpecFiles,
-      BasePath                = binDir + Directory("content"),
-      OutputDirectory         = dir
-   });
+   NuGetPack(
+      "./static_package.nuspec",
+      new NuGetPackSettings 
+      {
+         Version                 = ver,
+         ReleaseNotes            = new [] {$"Version {ver} of the Codecov-Uploader", $"https://github.com/codecov/uploader/releases/tag/{version}"},
+         Symbols                 = false,
+         NoPackageAnalysis       = true,
+         Files                   = nuSpecFiles,
+         BasePath                = binDir + Directory("content"),
+         OutputDirectory         = dir
+      });
 });
 
 Task("Push")

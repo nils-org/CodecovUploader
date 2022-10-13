@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>CodecovUploader</id>
+    <title>CodecovUploader</title>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectUrl>https://github.com/nils-org/CodecovUploader</projectUrl>
+    <description>Unofficial package of the official Codecov-Uploader</description>
+    <summary>Unofficial package of the official Codecov-Uploader</summary>
+    <copyright>Codecov</copyright>
+    <tags>Codecov upload test coverage</tags>
+    <readme>readme.md</readme>
+    <license type="file">license.txt</license>
+    <icon>logo.png</icon>
+    <authors>Codecov</authors>
+  </metadata>
+</package>
