@@ -82,8 +82,18 @@ Task("GetExecutables")
    DownloadExecutable("windows", dir);
 });
 
+Task("GetLicense")
+.Does(() => {
+   var url = "https://cdn.jsdelivr.net/gh/codecov/uploader@main/LICENSE";
+   var dir = binDir + Directory("root");
+   CleanDirectory(dir);
+   var filePath = dir + File("license.txt");
+   DownloadFile(url, filePath.Path);
+});
+
 Task("Pack")
 .IsDependentOn("GetExecutables")
+.IsDependentOn("GetLicense")
 .Does(() => {
    if(string.IsNullOrEmpty(version)) 
    {
@@ -94,8 +104,26 @@ Task("Pack")
    var dir = binDir + Directory("./package");
    CleanDirectory(dir);
 
-   var files = GetFiles((binDir + File("content/*")).Path.FullPath).ToArray();
-   Information($"Packing {files.Length} files.");
+   var contentFiles = GetFiles((binDir + File("content/*")).Path.FullPath).ToArray();
+   Information($"Packing {contentFiles.Length} content files.");
+
+   var rootFiles = GetFiles ((binDir + File("root/*")).Path.FullPath).ToArray();
+   Information($"Packing {rootFiles.Length} root files.");
+
+   var nuSpecFiles = contentFiles
+      .Select(f => new NuSpecContent 
+      { 
+         Source = f.FullPath, 
+         Target = $"tools/{f.GetFilename()}" 
+      })
+      .Union(rootFiles
+         .Select(f => new NuSpecContent 
+         { 
+            Source = f.FullPath, 
+            Target = $"{f.GetFilename()}" 
+         })
+      )
+      .ToArray();
 
    var ver = version.Substring(1);
    NuGetPack(new NuGetPackSettings 
@@ -108,14 +136,14 @@ Task("Pack")
       Summary                 = "Unofficial package of the official Codecov-Uploader",
       ProjectUrl              = new Uri("https://github.com/nils-org/CodecovUploader/"),
       IconUrl                 = new Uri("https://cdn.jsdelivr.net/gh/codecov/media@0953f4e0d5315fb6d526a248bc88e1bc16506a37/logos/pink.png"),
-      LicenseUrl              = new Uri("https://github.com/codecov/uploader/blob/main/LICENSE"),
+      License                 = new NuSpecLicense{Type = "file", Value = "license.txt"},
       Copyright               = "Codecov",
       ReleaseNotes            = new [] {$"Version {ver} of the Codecov-Uploader", $"https://github.com/codecov/uploader/releases/tag/{version}"},
       Tags                    = new [] {"Codecov", "upload", "test", "coverage"},
       RequireLicenseAcceptance= false,
       Symbols                 = false,
       NoPackageAnalysis       = true,
-      Files                   = files.Select(f => new NuSpecContent { Source = f.FullPath, Target = $"tools/{f.GetFilename()}" }).ToArray(),
+      Files                   = nuSpecFiles,
       BasePath                = binDir + Directory("content"),
       OutputDirectory         = dir
    });
