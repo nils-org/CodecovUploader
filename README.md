@@ -1,7 +1,8 @@
 # CodecovUploader
+
 Unofficial NuGet package of the official Codecov-uploader.
 
-[![Nuget](https://img.shields.io/nuget/v/CodecovUploader)](https://github.com/codecov/uploader)
+[![Nuget](https://img.shields.io/nuget/v/CodecovUploader)](https://www.nuget.org/packages/CodecovUploader#readme-body-tab)
 [![check for a new version](https://github.com/nils-org/CodecovUploader/actions/workflows/check-new.yml/badge.svg)](https://github.com/nils-org/CodecovUploader/actions/workflows/check-new.yml)
 
 The aim of this project is to make the official [Codecov uploader](https://uploader.codecov.io/) available as a NuGet package.

@@ -47,7 +47,7 @@ private void DownloadExecutable(string distro, DirectoryPath dir)
    DownloadFile(link, dir.CombineWithFilePath(File(name)));
 }
 
-private string[] GetExistingNuGetVersions() 
+private string[] GetExistingNuGetVersions()
 {
    var settings =  new HttpSettings
    {
@@ -105,7 +105,7 @@ Task("Pack")
 .IsDependentOn("GetExecutables")
 .IsDependentOn("GetArtifacts")
 .Does(() => {
-   if(string.IsNullOrEmpty(version)) 
+   if(string.IsNullOrEmpty(version))
    {
       Error("version is not set.");
       throw new ArgumentNullException("version");
@@ -121,16 +121,16 @@ Task("Pack")
    Information($"Packing {rootFiles.Length} root files.");
 
    var nuSpecFiles = contentFiles
-      .Select(f => new NuSpecContent 
-      { 
-         Source = f.FullPath, 
-         Target = $"tools/{f.GetFilename()}" 
+      .Select(f => new NuSpecContent
+      {
+         Source = f.FullPath,
+         Target = $"tools/{f.GetFilename()}"
       })
       .Union(rootFiles
-         .Select(f => new NuSpecContent 
-         { 
-            Source = f.FullPath, 
-            Target = $"{f.GetFilename()}" 
+         .Select(f => new NuSpecContent
+         {
+            Source = f.FullPath,
+            Target = $"{f.GetFilename()}"
          })
       )
       .ToArray();
@@ -138,7 +138,7 @@ Task("Pack")
    var ver = version.Substring(1);
    NuGetPack(
       "./static_package.nuspec",
-      new NuGetPackSettings 
+      new NuGetPackSettings
       {
          Version                 = ver,
          ReleaseNotes            = new [] {$"Version {ver} of the Codecov-Uploader", $"https://github.com/codecov/uploader/releases/tag/{version}"},
@@ -152,12 +152,12 @@ Task("Pack")
 
 Task("Push")
  .IsDependentOn("Pack")
- .Does(() => 
+ .Does(() =>
 {
     var package = GetFiles((binDir + File("package/*.nupkg")).Path.ToString()).Single();
     var apiKey = EnvironmentVariable("NuGet_ApiKey");
 
-   if(string.IsNullOrEmpty(apiKey)) 
+   if(string.IsNullOrEmpty(apiKey))
    {
       Error("NuGet_ApiKey is not set.");
       throw new ArgumentNullException("NuGet_ApiKey");
@@ -176,7 +176,7 @@ Task("CI")
 
    var currentVer = GetLatestVersion().Substring(1);
    Information("Current version in Codecov: " + currentVer);
-   if(versions.Contains(currentVer)) 
+   if(versions.Contains(currentVer))
    {
       Information("Version already in NuGet. Nothing to do.");
       return;
@@ -187,30 +187,29 @@ Task("CI")
 });
 
 Task("GetVersionManually")
-.Does(() => 
+.Does(() =>
 {
-   if(string.IsNullOrEmpty(version)) 
+   if(string.IsNullOrEmpty(version))
    {
       Error("version is not set. Use argument 'tool-version'. E.g. '--tool-version=0.2.4'");
       throw new ArgumentNullException("version");
    }
 
-   if(version.StartsWith("v")) 
+   if(version.StartsWith("v"))
    {
       version = version.Substring(1);
    }
 
    var nuGetVersions = GetExistingNuGetVersions();
-   if(nuGetVersions.Contains(version)) 
+   if(nuGetVersions.Contains(version))
    {
       Information("Version already in NuGet. Nothing to do.");
       return;
    }
-   
+
    version = "v"+version;
    RunTarget("Push");
 });
-
 
 Task("Default")
  .IsDependentOn("Clean")
