@@ -1,5 +1,7 @@
+#addin nuget:?package=Cake.FileHelpers&version=6.1.3
 #addin nuget:?package=Cake.Http&version=3.0.2
 #addin nuget:?package=Cake.Json&version=7.0.1
+
 
 var target = Argument("target", "Default");
 var version = Argument<string>("tool-version", null);
@@ -169,6 +171,74 @@ Task("Push")
    });
 });
 
+Task("Update-Readme")
+ .Does(() =>
+ {
+   if(string.IsNullOrEmpty(version))
+   {
+      Error("version is not set.");
+      throw new ArgumentNullException("version");
+   }
+
+   var readme = File("./README.md");
+   var readmeText = FileReadText(readme, Encoding.UTF8);
+
+   var startToken = "<!-- REPLACE_ME -->";
+   var endToken = "<!-- /REPLACE_ME -->";
+   var from = readmeText.IndexOf(startToken);
+   var to = readmeText.IndexOf(endToken) + endToken.Length;
+   var newReadmeText = new StringBuilder(readmeText.Substring(0, from));
+   newReadmeText.Append(startToken);
+   newReadmeText.Append(version);
+   newReadmeText.Append(endToken);
+   newReadmeText.Append(readmeText.Substring(to));
+
+   FileWriteText(readme, Encoding.UTF8, newReadmeText.ToString());
+ });
+
+Task("Push-Readme")
+ .IsDependentOn("Update-Readme")
+ .Does(() =>
+{
+   var git = Context.Tools.Resolve("git.exe");
+   if(git == null) {
+      Context.Tools.Resolve("git");
+   }
+   if(git == null) {
+      throw new ArgumentNullException("git");
+   }
+
+   var exitCode = StartProcess(
+      git,
+      new ProcessSettings {
+         Arguments = "add README.md"
+      }
+   );
+   if(exitCode != 0){
+      throw new Exception("error running git");
+   }
+
+   exitCode = StartProcess(
+      git,
+      new ProcessSettings {
+         Arguments = $"commit -m \"released version {version}\""
+      }
+   );
+   if(exitCode != 0){
+      throw new Exception("error running git");
+   }
+
+   exitCode = StartProcess(
+      git,
+      new ProcessSettings {
+         Arguments = $"push"
+      }
+   );
+   if(exitCode != 0){
+      throw new Exception("error running git");
+   }
+});
+
 Task("CI")
  .Does(() =>
 {
@@ -184,6 +254,7 @@ Task("CI")
 
    version = "v"+currentVer;
    RunTarget("Push");
+   RunTarget("Push-Readme");
 });
 
 Task("GetVersionManually")
