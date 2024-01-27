@@ -1,4 +1,4 @@
-#addin nuget:?package=Cake.FileHelpers&version=6.1.3
+#addin nuget:?package=Cake.FileHelpers&version=7.0.0
 #addin nuget:?package=Cake.Http&version=4.0.0
 #addin nuget:?package=Cake.Json&version=7.0.1
 
