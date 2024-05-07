@@ -253,8 +253,8 @@ Task("CI")
    }
 
    version = "v"+currentVer;
-   RunTarget("Push");
    RunTarget("Push-Readme");
+   RunTarget("Push");
 });
 
 Task("GetVersionManually")
