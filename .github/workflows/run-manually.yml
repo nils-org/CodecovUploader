@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest 
     steps:
       - name: Checkout the repository 
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4
       - name: Do Check
         uses: cake-build/cake-action@1223b6fa067ad192159f43b50cd4f953679b0934 # v2.0.0
         with:
